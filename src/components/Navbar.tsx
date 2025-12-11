@@ -1,25 +1,25 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Category } from '../types';
+import { useCart } from '../context/CartContext';
 
-// Props interface - "readonly" tells TypeScript these props should not be modified
-// This is a best practice - components should not mutate their props
 interface NavbarProps {
-  readonly categories: Category[];           // readonly = cannot be changed
-  readonly cartItemsCount: number;           
-  readonly onCategoryClick: (category: Category | null) => void;  
+  readonly categories: Category[];
+  readonly onCategoryClick: (category: Category | null) => void;
 }
 
-function Navbar({ categories, cartItemsCount, onCategoryClick }: NavbarProps) {
+function Navbar({ categories, onCategoryClick }: NavbarProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  
+  // Get totalItems from cart context - this replaces the prop we had before
+  const { totalItems } = useCart();
 
-  // Handler for keyboard accessibility
-  // Allows users to press Enter or Space to activate the element
   const handleKeyDown = (
     event: React.KeyboardEvent,
     callback: () => void
   ) => {
     if (event.key === 'Enter' || event.key === ' ') {
-      event.preventDefault();  // Prevent page scroll on Space
+      event.preventDefault();
       callback();
     }
   };
@@ -27,29 +27,17 @@ function Navbar({ categories, cartItemsCount, onCategoryClick }: NavbarProps) {
   return (
     <nav className="bg-white shadow-md sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4">
-        
         <div className="flex justify-between items-center h-16">
           
-          {/* Logo - now with proper accessibility */}
-          {/* role="button" - tells screen readers this is clickable */}
-          {/* tabIndex={0} - allows keyboard navigation (Tab key) */}
-          {/* onKeyDown - handles Enter/Space key presses */}
-          <div 
-            className="flex-shrink-0 cursor-pointer"
-            role="button"
-            tabIndex={0}
-            onClick={() => onCategoryClick(null)}
-            onKeyDown={(e) => handleKeyDown(e, () => onCategoryClick(null))}
-            aria-label="Retour à l'accueil"  // Screen reader description
-          >
+          {/* Logo */}
+          <Link to="/" className="flex-shrink-0">
             <h1 className="text-xl font-bold text-gray-900">
               🛍️ La Boutique Française
             </h1>
-          </div>
+          </Link>
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
-            
             <button
               type="button"
               onClick={() => onCategoryClick(null)}
@@ -70,19 +58,19 @@ function Navbar({ categories, cartItemsCount, onCategoryClick }: NavbarProps) {
             ))}
           </div>
 
-          {/* Cart button */}
+          {/* Cart link */}
           <div className="flex items-center">
-            <button 
-              type="button"
+            <Link 
+              to="/cart" 
               className="relative p-2 text-gray-600 hover:text-gray-900 transition-colors"
-              aria-label={`Panier avec ${cartItemsCount} article${cartItemsCount > 1 ? 's' : ''}`}
+              aria-label={`Panier avec ${totalItems} article${totalItems > 1 ? 's' : ''}`}
             >
               <svg 
                 className="w-6 h-6" 
                 fill="none" 
                 stroke="currentColor" 
                 viewBox="0 0 24 24"
-                aria-hidden="true"  // Hide decorative SVG from screen readers
+                aria-hidden="true"
               >
                 <path 
                   strokeLinecap="round" 
@@ -92,15 +80,15 @@ function Navbar({ categories, cartItemsCount, onCategoryClick }: NavbarProps) {
                 />
               </svg>
               
-              {cartItemsCount > 0 && (
+              {totalItems > 0 && (
                 <span 
                   className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center"
-                  aria-hidden="true"  // Count is already in aria-label above
+                  aria-hidden="true"
                 >
-                  {cartItemsCount}
+                  {totalItems}
                 </span>
               )}
-            </button>
+            </Link>
 
             {/* Mobile menu button */}
             <button
@@ -108,7 +96,7 @@ function Navbar({ categories, cartItemsCount, onCategoryClick }: NavbarProps) {
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="ml-4 md:hidden p-2 text-gray-600 hover:text-gray-900"
               aria-label={mobileMenuOpen ? 'Fermer le menu' : 'Ouvrir le menu'}
-              aria-expanded={mobileMenuOpen}  // Tells screen reader if menu is open
+              aria-expanded={mobileMenuOpen}
             >
               <svg 
                 className="w-6 h-6" 

@@ -1,27 +1,37 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Product } from '../types';
+import { Product, Category } from '../types';
 import { api } from '../services/api';
+import { useCart } from '../context/CartContext';
+import Navbar from '../components/Navbar';
 
 function ProductDetail() {
-  // useParams - React Router hook to get URL parameters
-  // Similar to $slug in Symfony controller: function index($slug)
   const { id } = useParams<{ id: string }>();
   
   const [product, setProduct] = useState<Product | null>(null);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // Get addToCart from context
+  const { addToCart } = useCart();
 
-  // Fetch product when component mounts or id changes
-  // Similar to Symfony: $product = $productRepository->findOneBySlug($slug);
+  // Fetch product and categories
   useEffect(() => {
-    const fetchProduct = async () => {
+    const fetchData = async () => {
       if (!id) return;
       
       try {
         setLoading(true);
-        const data = await api.getProduct(parseInt(id));
-        setProduct(data);
+        
+        // Fetch both product and categories
+        const [productData, categoriesData] = await Promise.all([
+          api.getProduct(parseInt(id)),
+          api.getCategories()
+        ]);
+        
+        setProduct(productData);
+        setCategories(categoriesData);
       } catch (err) {
         setError('Produit non trouvé');
         console.error('Error fetching product:', err);
@@ -30,13 +40,19 @@ function ProductDetail() {
       }
     };
 
-    fetchProduct();
-  }, [id]);  // Re-run when id changes
+    fetchData();
+  }, [id]);
 
-  // Calculate price with tax (same as Symfony's getPriceWt())
+  // Calculate price with tax
   const priceWithTax = product 
     ? product.price * (1 + product.tva / 100) 
     : 0;
+
+  // Handle category click - navigate to home with filter
+  // For now, just navigate to home (we'll improve this later)
+  const handleCategoryClick = () => {
+    // This will be handled by navigation
+  };
 
   // Loading state
   if (loading) {
@@ -47,50 +63,52 @@ function ProductDetail() {
     );
   }
 
-  // Error state - similar to Symfony's redirect if product not found
+  // Error state
   if (error || !product) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">
-            Produit non trouvé
-          </h1>
-          <Link 
-            to="/" 
-            className="text-blue-600 hover:text-blue-800"
-          >
-            ← Retour à l'accueil
-          </Link>
+      <div className="min-h-screen bg-gray-50">
+        <Navbar categories={[]} onCategoryClick={handleCategoryClick} />
+        <div className="flex items-center justify-center py-16">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-gray-900 mb-4">
+              Produit non trouvé
+            </h1>
+            <Link 
+              to="/" 
+              className="text-blue-600 hover:text-blue-800"
+            >
+              ← Retour à l'accueil
+            </Link>
+          </div>
         </div>
       </div>
     );
   }
 
-  // Main render - similar structure to your Twig template
+  // Main render
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Simple navbar with back link */}
-      <nav className="bg-white shadow-md">
-        <div className="max-w-7xl mx-auto px-4 py-4">
-          <Link 
-            to="/" 
-            className="text-gray-600 hover:text-gray-900 flex items-center"
-          >
-            {/* Back arrow icon */}
-            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-            Retour aux produits
-          </Link>
-        </div>
-      </nav>
+      {/* Full Navbar with cart icon */}
+      <Navbar categories={categories} onCategoryClick={handleCategoryClick} />
 
-      {/* Product detail - similar layout to your Twig template */}
-      <div className="max-w-7xl mx-auto px-4 py-12">
+      {/* Back link */}
+      <div className="max-w-7xl mx-auto px-4 py-4">
+        <Link 
+          to="/" 
+          className="text-gray-600 hover:text-gray-900 flex items-center text-sm"
+        >
+          <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+          Retour aux produits
+        </Link>
+      </div>
+
+      {/* Product detail */}
+      <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
           
           {/* Left column - Product image */}
-          {/* Symfony: <img src="/uploads/{{ product.illustration }}"> */}
           <div className="bg-white rounded-lg shadow-md overflow-hidden">
             <img
               src={`http://localhost:8080/uploads/${product.illustration}`}
@@ -101,7 +119,7 @@ function ProductDetail() {
 
           {/* Right column - Product info */}
           <div>
-            {/* Breadcrumb - similar to your Twig: Category > Product */}
+            {/* Breadcrumb */}
             <nav className="text-sm text-gray-500 mb-4">
               <Link to="/" className="hover:text-gray-700">Accueil</Link>
               <span className="mx-2">›</span>
@@ -110,12 +128,12 @@ function ProductDetail() {
               <span>{product.name}</span>
             </nav>
 
-            {/* Product name - Symfony: <h1>{{ product.name }}</h1> */}
+            {/* Product name */}
             <h1 className="text-3xl font-bold text-gray-900 mb-4">
               {product.name}
             </h1>
 
-            {/* Price - Symfony: {{ product.pricewt|price }} */}
+            {/* Price */}
             <p className="text-3xl font-bold text-gray-900 mb-6">
               {priceWithTax.toFixed(2).replace('.', ',')} €
             </p>
@@ -125,20 +143,16 @@ function ProductDetail() {
               TVA incluse ({product.tva}%)
             </p>
 
-            {/* Description - Symfony: {{ product.description|raw }} */}
-            {/* dangerouslySetInnerHTML = equivalent of |raw filter */}
+            {/* Description */}
             <div 
               className="prose text-gray-600 mb-8"
               dangerouslySetInnerHTML={{ __html: product.description }}
             />
 
             {/* Add to cart button */}
-            {/* Symfony: <a href="{{ path('app_cart_add', { id : product.id } ) }}"> */}
             <button
               type="button"
-              onClick={() => {
-                alert(`${product.name} ajouté au panier!`);
-              }}
+              onClick={() => addToCart(product)}
               className="w-full bg-green-600 text-white py-4 px-8 rounded-lg text-lg font-semibold hover:bg-green-700 transition-colors"
             >
               Ajouter au panier

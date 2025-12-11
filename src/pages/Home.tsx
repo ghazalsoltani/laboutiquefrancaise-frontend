@@ -1,22 +1,23 @@
 import { useEffect, useState } from 'react';
-import { Category, Product } from '../types';
+import { Product, Category } from '../types';
 import { api } from '../services/api';
+import { useCart } from '../context/CartContext';
 import ProductCard from '../components/ProductCard';
 import Navbar from '../components/Navbar';
 
 function Home() {
   // Products state
   const [products, setProducts] = useState<Product[]>([]);
-  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]); 
-
-  // categories state
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
+  
+  // Categories state
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
-
-  // cart state, array of products in cart
-  const [cart, setCart] = useState<Product[]>([]);
-
-   // Loading and error states
+  
+  // Get addToCart from context instead of managing cart state here
+  const { addToCart } = useCart();
+  
+  // Loading and error states
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -25,16 +26,12 @@ function Home() {
     const fetchData = async () => {
       try {
         setLoading(true);
-        
-        // Fetch both in parallel using Promise.all
-        // This is faster than fetching one after another
         const [productsData, categoriesData] = await Promise.all([
           api.getProducts(),
           api.getCategories()
         ]);
-        
         setProducts(productsData);
-        setFilteredProducts(productsData);  // Initially show all
+        setFilteredProducts(productsData);
         setCategories(categoriesData);
       } catch (err) {
         setError('Impossible de charger les données');
@@ -52,10 +49,8 @@ function Home() {
     setSelectedCategory(category);
     
     if (category === null) {
-      // Show all products
       setFilteredProducts(products);
     } else {
-      // Filter products by category
       const filtered = products.filter(
         (product) => product.category.id === category.id
       );
@@ -63,10 +58,9 @@ function Home() {
     }
   };
 
-  // Handle add to cart
+  // Handle add to cart - now uses context
   const handleAddToCart = (product: Product) => {
-    setCart([...cart, product]);  // Add product to cart array
-    console.log('Cart:', [...cart, product]);
+    addToCart(product);
   };
 
   // Loading state
@@ -88,6 +82,7 @@ function Home() {
         <div className="text-center">
           <p className="text-xl text-red-600">{error}</p>
           <button 
+            type="button"
             onClick={() => window.location.reload()}
             className="mt-4 px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800"
           >
@@ -100,10 +95,9 @@ function Home() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Navigation Bar */}
+      {/* Navigation Bar - removed cartItemsCount prop, now uses context */}
       <Navbar 
         categories={categories}
-        cartItemsCount={cart.length}
         onCategoryClick={handleCategoryClick}
       />
 
@@ -124,7 +118,6 @@ function Home() {
 
       {/* Products Section */}
       <div className="max-w-7xl mx-auto px-4 py-12">
-        {/* Section header with product count */}
         <div className="flex justify-between items-center mb-8">
           <h2 className="text-2xl font-bold text-gray-900">
             {selectedCategory ? selectedCategory.name : 'Tous nos produits'}
@@ -134,7 +127,6 @@ function Home() {
           </span>
         </div>
         
-        {/* Product Grid or Empty State */}
         {filteredProducts.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredProducts.map((product) => (
@@ -146,12 +138,12 @@ function Home() {
             ))}
           </div>
         ) : (
-          // Empty state when no products in category
           <div className="text-center py-16">
             <p className="text-xl text-gray-500">
               Aucun produit dans cette catégorie pour le moment.
             </p>
             <button
+              type="button"
               onClick={() => handleCategoryClick(null)}
               className="mt-4 px-6 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800"
             >
