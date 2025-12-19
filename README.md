@@ -1,11 +1,11 @@
 # La Boutique Française - React Frontend
 
-A modern, responsive e-commerce frontend built with **React 18** and **TypeScript**, consuming a REST API powered by Symfony. This project demonstrates a decoupled architecture where the frontend and backend operate as independent applications communicating via HTTP.
+A modern, responsive e-commerce frontend built with React 18 and TypeScript, consuming a REST API powered by Symfony. This project demonstrates a decoupled architecture where the frontend and backend operate as independent applications communicating via HTTP.
 
-![React](https://img.shields.io/badge/React-18.x-61DAFB?logo=react)
-![TypeScript](https://img.shields.io/badge/TypeScript-4.9-3178C6?logo=typescript)
-![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.x-06B6D4?logo=tailwindcss)
-![License](https://img.shields.io/badge/License-MIT-green)
+![React](https://img.shields.io/badge/React-18-61DAFB?logo=react)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3-06B6D4?logo=tailwindcss)
+![Stripe](https://img.shields.io/badge/Stripe-Payments-635BFF?logo=stripe)
 
 ## 🎯 Project Purpose
 
@@ -16,9 +16,9 @@ This frontend application serves as the client-side interface for an e-commerce 
 - **Type Safety**: Full TypeScript implementation with strict typing
 - **Responsive Design**: Mobile-first approach using Tailwind CSS utility classes
 - **JWT Authentication**: Secure user authentication with token persistence
+- **Stripe Integration**: Secure payment processing with Stripe Checkout
 
 ## 🏗️ Architecture Overview
-
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                         CLIENT (Browser)                         │
@@ -28,10 +28,10 @@ This frontend application serves as the client-side interface for an e-commerce 
 │  │  │   Pages     │  │ Components  │  │    Context      │   │  │
 │  │  │  - Home     │  │  - Navbar   │  │  - AuthContext  │   │  │
 │  │  │  - Product  │  │  - Product  │  │  - CartContext  │   │  │
-│  │  │  - Cart     │  │    Card     │  │                 │   │  │
-│  │  │  - Login    │  │  - Protected│  │                 │   │  │
-│  │  │  - Register │  │    Route    │  │                 │   │  │
-│  │  │  - Account  │  │             │  │                 │   │  │
+│  │  │  - Cart     │  │    Card     │  │  - CheckoutCtx  │   │  │
+│  │  │  - Checkout │  │  - Checkout │  │                 │   │  │
+│  │  │  - Orders   │  │    Steps    │  │                 │   │  │
+│  │  │  - Account  │  │  - Protected│  │                 │   │  │
 │  │  └─────────────┘  └─────────────┘  └─────────────────┘   │  │
 │  └───────────────────────────────────────────────────────────┘  │
 │                              │                                   │
@@ -39,7 +39,13 @@ This frontend application serves as the client-side interface for an e-commerce 
 │                              ▼                                   │
 │  ┌───────────────────────────────────────────────────────────┐  │
 │  │              Symfony Backend (localhost:8080)              │  │
-│  │         API Platform • JWT Auth • MySQL Database           │  │
+│  │    API Platform • JWT Auth • Stripe • MySQL Database       │  │
+│  └───────────────────────────────────────────────────────────┘  │
+│                              │                                   │
+│                              ▼                                   │
+│  ┌───────────────────────────────────────────────────────────┐  │
+│  │                    Stripe API                              │  │
+│  │              Secure Payment Processing                     │  │
 │  └───────────────────────────────────────────────────────────┘  │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -58,43 +64,60 @@ This frontend application serves as the client-side interface for an e-commerce 
 - **Real-time Updates**: Cart badge in navigation shows current item count
 - **Order Summary**: Subtotal, shipping, and total calculations
 
+### Multi-Step Checkout
+- **Address Management**: Create, select, and manage delivery addresses
+- **Carrier Selection**: Choose shipping method with real-time price updates
+- **Order Summary**: Review order details before payment
+- **Stripe Integration**: Secure payment via Stripe Checkout
+- **Order Confirmation**: Success page with order details
+
+### Order Management
+- **Order History**: View all past orders with status
+- **Order Status Tracking**: Visual badges showing order state
+  - 🟡 En attente de paiement
+  - 🔵 Paiement validé
+  - 🟣 En préparation
+  - 🟢 Expédiée
+  - 🔴 Annulée
+
 ### User Authentication
 - **JWT-based Login**: Secure authentication using JSON Web Tokens
 - **User Registration**: New account creation with form validation
 - **Session Persistence**: Token stored in localStorage, automatically decoded on page refresh
-- **Protected Routes**: Certain pages require authentication to access
-- **User Profile**: Account page displaying user information
+- **Protected Routes**: Checkout and account pages require authentication
 
 ### User Interface
 - **Responsive Navigation**: Desktop menu with mobile hamburger menu
 - **Loading States**: Spinner animations during data fetching
 - **Error Handling**: User-friendly error messages
-- **Smooth Transitions**: Hover effects and animations on interactive elements
+- **Checkout Progress**: Visual step indicator during checkout
 
 ## 🛠️ Technology Stack
 
 | Technology | Purpose |
 |------------|---------|
-| **React 18** | UI library with concurrent features |
-| **TypeScript** | Static typing for improved code quality |
-| **React Router 6** | Client-side routing and navigation |
-| **Tailwind CSS 3** | Utility-first CSS framework |
-| **jwt-decode** | Client-side JWT token parsing |
-| **Context API** | Global state management (Auth, Cart) |
-| **Fetch API** | HTTP requests to backend |
+| React 18 | UI library with concurrent features |
+| TypeScript | Static typing for improved code quality |
+| React Router 6 | Client-side routing and navigation |
+| Tailwind CSS 3 | Utility-first CSS framework |
+| jwt-decode | Client-side JWT token parsing |
+| Context API | Global state management (Auth, Cart, Checkout) |
+| Fetch API | HTTP requests to backend |
+| Stripe | Payment processing |
 
 ## 📁 Project Structure
-
 ```
 src/
 ├── components/              # Reusable UI components
 │   ├── Navbar.tsx          # Navigation with auth state & cart badge
 │   ├── ProductCard.tsx     # Product display card
+│   ├── CheckoutSteps.tsx   # Checkout progress indicator
 │   └── ProtectedRoute.tsx  # Route guard for authenticated pages
 │
 ├── context/                 # React Context providers
 │   ├── AuthContext.tsx     # Authentication state & JWT handling
-│   └── CartContext.tsx     # Shopping cart state & localStorage
+│   ├── CartContext.tsx     # Shopping cart state & localStorage
+│   └── CheckoutContext.tsx # Checkout flow state management
 │
 ├── pages/                   # Page components (routes)
 │   ├── Home.tsx            # Product grid with category filter
@@ -102,20 +125,55 @@ src/
 │   ├── CartPage.tsx        # Shopping cart management
 │   ├── LoginPage.tsx       # User login form
 │   ├── RegisterPage.tsx    # User registration form
-│   └── AccountPage.tsx     # User profile (protected)
+│   ├── AccountPage.tsx     # User profile (protected)
+│   ├── OrdersPage.tsx      # Order history (protected)
+│   └── checkout/           # Checkout flow pages
+│       ├── AddressStep.tsx # Address selection/creation
+│       ├── CarrierStep.tsx # Shipping method selection
+│       ├── SummaryStep.tsx # Order review & payment
+│       ├── SuccessPage.tsx # Payment confirmation
+│       └── CancelPage.tsx  # Payment cancelled
 │
 ├── services/                # API communication layer
 │   └── api.ts              # Centralized API calls
 │
 ├── types/                   # TypeScript type definitions
-│   └── index.ts            # Product, Category, CartItem interfaces
+│   └── index.ts            # Product, Category, Order, Address interfaces
 │
 ├── App.tsx                  # Route configuration
 └── index.tsx               # Application entry point
 ```
 
-## 🔐 Authentication Flow
+## 💳 Checkout & Payment Flow
+```
+┌──────────────────────────────────────────────────────────────┐
+│                     Checkout Flow                             │
+├──────────────────────────────────────────────────────────────┤
+│                                                               │
+│  1. CART                                                      │
+│     └─→ Review items, click "Passer la commande"              │
+│                                                               │
+│  2. ADDRESS SELECTION                                         │
+│     └─→ Select existing or create new delivery address        │
+│                                                               │
+│  3. CARRIER SELECTION                                         │
+│     └─→ Choose shipping method (Colissimo, Chronopost, etc.)  │
+│                                                               │
+│  4. ORDER SUMMARY                                             │
+│     └─→ Review order, click "Payer XX €"                      │
+│                                                               │
+│  5. STRIPE CHECKOUT (External)                                │
+│     └─→ Enter card details on secure Stripe page              │
+│     └─→ Test card: 4242 4242 4242 4242                        │
+│                                                               │
+│  6. CONFIRMATION                                              │
+│     └─→ Payment verified, order status updated                │
+│     └─→ Cart cleared, confirmation displayed                  │
+│                                                               │
+└──────────────────────────────────────────────────────────────┘
+```
 
+## 🔐 Authentication Flow
 ```
 ┌──────────────────────────────────────────────────────────────┐
 │                    Authentication Flow                        │
@@ -150,7 +208,6 @@ src/
 - Backend API running on `http://localhost:8080` (see [Backend Repository](https://github.com/ghazalsoltani/Ecommerce-Symfony-App))
 
 ### Installation
-
 ```bash
 # Clone the repository
 git clone https://github.com/ghazalsoltani/laboutiquefrancaise-frontend.git
@@ -165,57 +222,59 @@ npm start
 
 The application will open at `http://localhost:3000`
 
-### Environment Configuration
+### Testing Stripe Payments
 
-The API base URL is configured in `src/services/api.ts`:
-```typescript
-const API_URL = 'http://localhost:8080/api';
-```
+Use these test card numbers:
+- **Success**: `4242 4242 4242 4242`
+- **Declined**: `4000 0000 0000 0002`
+- **Requires Auth**: `4000 0025 0000 3155`
+
+Use any future expiry date and any 3-digit CVC.
 
 ## 🧩 Key Implementation Details
 
 ### State Management with Context API
 
-The application uses React Context for global state, avoiding prop drilling:
+The application uses React Context for global state:
 
-**AuthContext** manages:
-- User authentication state
-- JWT token storage and decoding
-- Login/logout functions
-- Token expiration validation
-
-**CartContext** manages:
-- Cart items array
-- Add/remove/update quantity functions
-- Total calculations
-- localStorage persistence
+- **AuthContext**: User authentication, JWT handling, login/logout
+- **CartContext**: Shopping cart items, localStorage persistence
+- **CheckoutContext**: Checkout flow state (address, carrier, order ID)
 
 ### Type-Safe API Communication
 
 All API responses are typed with TypeScript interfaces:
-
 ```typescript
-interface Product {
+interface Order {
   id: number;
-  name: string;
-  slug: string;
-  description: string;
-  illustration: string;
-  price: number;
-  tva: number;
-  category: Category;
-  isHomepage: boolean;
+  createdAt: string;
+  state: number;
+  carrierName: string;
+  carrierPrice: number;
+  delivery: string;
+  orderDetails: OrderDetail[];
+  total: number;
+}
+
+interface Address {
+  id: number;
+  firstname: string;
+  lastname: string;
+  address: string;
+  postal: string;
+  city: string;
+  country: string;
+  phone: string;
 }
 ```
 
 ### Protected Routes Pattern
 
 Routes requiring authentication are wrapped with `ProtectedRoute`:
-
 ```tsx
-<Route path="/account" element={
+<Route path="/checkout/address" element={
   <ProtectedRoute>
-    <AccountPage />
+    <AddressStep />
   </ProtectedRoute>
 } />
 ```
@@ -223,7 +282,8 @@ Routes requiring authentication are wrapped with `ProtectedRoute`:
 ## 🔗 Related Repository
 
 This frontend consumes the API from the Symfony backend:
-- **Backend Repository**: [Ecommerce-Symfony-App](https://github.com/ghazalsoltani/Ecommerce-Symfony-App)
+
+**Backend Repository**: [Ecommerce-Symfony-App](https://github.com/ghazalsoltani/Ecommerce-Symfony-App)
 
 ## 📝 Development Approach
 
@@ -233,13 +293,13 @@ This project was developed following these principles:
 2. **Separation of Concerns**: Clear separation between UI (components), state (context), and data fetching (services)
 3. **Type Safety First**: TypeScript interfaces defined before implementation
 4. **Mobile-First Design**: Responsive design starting from mobile breakpoints
-5. **Progressive Enhancement**: Core functionality works, enhanced features layer on top
+5. **Secure Payments**: Payment processing delegated to Stripe (PCI compliant)
 
 ## 👤 Author
 
 **Ghazal Soltani**
 - GitHub: [@ghazalsoltani](https://github.com/ghazalsoltani)
-- LinkedIn: [ghazal-soltani](https://linkedin.com/in/ghazal-soltani)
+- LinkedIn: [ghazal-soltani](https://www.linkedin.com/in/ghazal-soltani/)
 
 ## 📄 License
 
