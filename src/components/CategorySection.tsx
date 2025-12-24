@@ -1,8 +1,8 @@
 import { Category } from "../types";
 
 interface CategorySectionProps {
-  readonly categories: Category[];
-  readonly onCategoryClick: (category: Category) => void;
+  readonly categories?: Category[];
+  readonly onCategoryClick?: (category: Category) => void;
 }
 
 // Category images mapping
@@ -20,11 +20,16 @@ const categoryDescriptions: Record<string, string> = {
 };
 
 function CategorySection({
-  categories,
+  categories = [],
   onCategoryClick,
 }: CategorySectionProps) {
+  // Safe categories array
+  const safeCategories = Array.isArray(categories) ? categories : [];
+
   const handleClick = (category: Category) => {
-    onCategoryClick(category);
+    if (onCategoryClick) {
+      onCategoryClick(category);
+    }
 
     // Scroll to products section
     setTimeout(() => {
@@ -34,6 +39,11 @@ function CategorySection({
       }
     }, 100);
   };
+
+  // Don't render if no categories
+  if (safeCategories.length === 0) {
+    return null;
+  }
 
   return (
     <section className="py-16 bg-gray-50">
@@ -46,7 +56,7 @@ function CategorySection({
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {categories.map((category) => (
+          {safeCategories.map((category) => (
             <button
               key={category.id}
               type="button"

@@ -53,6 +53,9 @@ function Home() {
 
   // Handle category filter
   const handleCategoryClick = (category: Category | null) => {
+    console.log('Category clicked:', category);
+    console.log('All products:', products);
+    
     setSelectedCategory(category);
 
     if (category === null) {
@@ -61,9 +64,12 @@ function Home() {
       const filtered = products.filter(
         (product) => product.category.id === category.id
       );
+      console.log('Filtered products:', filtered);
       setFilteredProducts(filtered);
     }
-  };
+};
+
+  
 
   // Handle add to cart
   const handleAddToCart = (product: Product) => {
@@ -178,6 +184,7 @@ function Home() {
       <Footer />
     </div>
   );
+
 }
 
 export default Home;

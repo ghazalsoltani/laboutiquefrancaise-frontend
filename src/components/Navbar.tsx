@@ -5,14 +5,24 @@ import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
 
 interface NavbarProps {
-  readonly categories: Category[];
-  readonly onCategoryClick: (category: Category | null) => void;
+  readonly categories?: Category[];
+  readonly onCategoryClick?: (category: Category | null) => void;
 }
 
-function Navbar({ categories, onCategoryClick }: NavbarProps) {
+function Navbar({ categories = [], onCategoryClick }: NavbarProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { totalItems } = useCart();
   const { user, isAuthenticated, logout } = useAuth();
+
+  // Safe categories array
+  const safeCategories = Array.isArray(categories) ? categories : [];
+
+  // Safe click handler
+  const handleCategoryClick = (category: Category | null) => {
+    if (onCategoryClick) {
+      onCategoryClick(category);
+    }
+  };
 
   return (
     <nav className="bg-white shadow-sm sticky top-0 z-50 border-b border-gray-100">
@@ -21,7 +31,7 @@ function Navbar({ categories, onCategoryClick }: NavbarProps) {
           {/* Logo */}
           <Link
             to="/"
-            onClick={() => onCategoryClick(null)}
+            onClick={() => handleCategoryClick(null)}
             className="flex items-center gap-3"
           >
             <img
@@ -38,17 +48,17 @@ function Navbar({ categories, onCategoryClick }: NavbarProps) {
           <div className="hidden md:flex items-center space-x-1">
             <button
               type="button"
-              onClick={() => onCategoryClick(null)}
+              onClick={() => handleCategoryClick(null)}
               className="px-4 py-2 text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg font-medium transition-all"
             >
               Tous les produits
             </button>
 
-            {categories.map((category) => (
+            {safeCategories.map((category) => (
               <button
                 type="button"
                 key={category.id}
-                onClick={() => onCategoryClick(category)}
+                onClick={() => handleCategoryClick(category)}
                 className="px-4 py-2 text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg font-medium transition-all"
               >
                 {category.name}
@@ -166,7 +176,7 @@ function Navbar({ categories, onCategoryClick }: NavbarProps) {
             <button
               type="button"
               onClick={() => {
-                onCategoryClick(null);
+                handleCategoryClick(null);
                 setMobileMenuOpen(false);
               }}
               className="block w-full text-left px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg font-medium"
@@ -174,12 +184,12 @@ function Navbar({ categories, onCategoryClick }: NavbarProps) {
               Tous les produits
             </button>
 
-            {categories.map((category) => (
+            {safeCategories.map((category) => (
               <button
                 type="button"
                 key={category.id}
                 onClick={() => {
-                  onCategoryClick(category);
+                  handleCategoryClick(category);
                   setMobileMenuOpen(false);
                 }}
                 className="block w-full text-left px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg font-medium"

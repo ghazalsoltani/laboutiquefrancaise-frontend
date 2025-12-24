@@ -14,7 +14,7 @@ const getAuthHeaders = (): HeadersInit => {
 export const api = {
     // PRODUCTS & CATEGORIES
     async getProducts(): Promise<Product[]> {
-        const response = await fetch(`${API_URL}/products`);
+        const response = await fetch(`${API_URL}/products?itemsPerPage=100`);
         const data = await response.json();
         return data.member || data['hydra:member'] || data || [];
     },
